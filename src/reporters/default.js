@@ -1,8 +1,8 @@
 const statusMap = {
 
-	'ok': [ 'ok', '✅' ],
-	'notOk': [ 'notOk', '❌' ],
-	'skip': [ 'skip', '⚠️' ],
+	'ok': [ '✅', 'ok' ],
+	'notOk': [ '❌', 'notOk' ],
+	'skip': [ '⚠️', 'skip' ],
 
 };
 
@@ -18,7 +18,7 @@ const Default = (runner, options) => {
 
 			const s = statusMap[x.status];
 
-			console.log('>', s[0], s[1], x.description);
+			console.log(`>${s[0]}  ${s[1]} ${x.description}`);
 			(options.trace
 			&& x.reason
 			&& console.log('\n---\n\n', x.reason, '\n\n---\n'));

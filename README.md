@@ -45,4 +45,4 @@ gunner.run();
 
 ## Credits
 
-`Gunner` was built by Muthu Kumar [(@MKRhere)](https://github.com/MKRhere) at [Klenty](https://klenty.com), a sales automation startup.
+`Gunner` was originally built by Muthu Kumar [(@MKRhere)](https://github.com/MKRhere) at [Klenty](https://klenty.com), a sales automation startup. Now it's ,maintained by CodeFeathers.

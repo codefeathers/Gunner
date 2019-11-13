@@ -1,116 +1,40 @@
-'use strict';
+module.exports = function Gunner (name) {
+	const suite = {};
+	const order = [];
 
-const { arrayOrPush } = require('./util');
+	const gunner = {
+		test: ({ name, value, expect }) => {
+			order.push(name);
+			suite[name] || (suite[name] = {});
 
-const caller = require('./lib/caller');
-const emitter = require('./lib/emitter');
-const reporters = require('./reporters');
-const testrunner = require('./lib/testrunner');
+			suite[name].main = () => expect(value());
 
-const symbols = require('./util/symbols');
+			return suite;
+		},
+		before: ({ test, perform }) => {
+			suite[test] || (suite[test] = {});
+			const before = suite[test].before || (suite[test].before = []);
+			before.push(perform);
 
-class Gunner {
+			return suite;
+		},
+		after: ({ test, perform }) => {
+			suite[test] || (suite[test] = {});
+			const after = suite[test].after || (suite[test].after = []);
+			after.push(perform);
 
-	constructor (name) {
-		this.name = name;
-		this.__suite__ = {
-			tests: [],
-			beforeHooks: {
-				[symbols.Start]: [],
-				[symbols.End]: [],
-				'*': [],
-			},
-			afterHooks: {
-				[symbols.Start]: [],
-				[symbols.End]: [],
-				'*': [],
+			return suite;
+		},
+		run: () => {
+			for (const name of order) {
+				const { before = [], main, after = [] } = suite[name];
+				for (const each of before) each();
+				if (!main()) throw new Error("FAIL!");
+				for (const each of after) each();
 			}
-		};
-	}
+			console.log(name, "All tests pass!");
+		}
+	};
 
-	test (description, test) {
-		const existing = (
-			this.__suite__.tests
-			.find(x => x.description === description)
-		);
-		if (existing)
-			throw new Error(`Test '${description}' already exists!`);
-
-		const unit = {
-			description,
-			type: 'test',
-			run: state => caller(test, state),
-		};
-		this.__suite__.tests.push(unit);
-		return this;
-	}
-
-	before (description, run, label) {
-		const unit = {
-			description,
-			label,
-			type: 'hook',
-			run: state => caller(run, state),
-		};
-		arrayOrPush(this.__suite__.beforeHooks, description, unit);
-		return this;
-	}
-
-	after (description, run, label) {
-		const unit = {
-			description,
-			label,
-			type: 'hook',
-			run: state => caller(run, state),
-		};
-		arrayOrPush(this.__suite__.afterHooks, description, unit);
-		return this;
-	}
-
-	run (options = {}) {
-
-		if (options.reporter === true)
-			reporters.default(emitter, options);
-		else if (typeof options.reporter === 'function')
-			options.reporter(emitter, options);
-		else if (reporters[options.reporter])
-			reporters[options.reporter](emitter, options);
-
-		emitter.emit('start');
-		return testrunner(this, options)
-		.then(results => {
-			results.count = results.length;
-			results.success = results.filter(r => r.status === 'ok');
-			results.failures = results.filter(r => r.status === 'notOk');
-			results.skipped = results.filter(r => r.status === 'skip');
-			results.successPercent = Math.floor(
-				results.success.length/results.length * 100
-			);
-
-			results.name = this.name;
-
-			if((results.successPercent !== 100)
-				&& typeof process !== 'undefined')
-				process.exitCode = 1;
-			emitter.emit('test end', results);
-			emitter.emit('end', results);
-
-			return (options.request
-				? {
-					[options.request]:
-						reporters[options.request].convert(results),
-					default: results }
-				: results);
-		});
-	}
-
-}
-
-const expect = require('./lib/expect');
-
-module.exports = Gunner;
-module.exports.expect = expect;
-module.exports.expectMany = expect.expectMany;
-module.exports.Start = symbols.Start;
-module.exports.End = symbols.End;
-module.exports.Gunner = module.exports;
+	return gunner;
+};

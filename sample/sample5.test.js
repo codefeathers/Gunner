@@ -3,7 +3,7 @@
  * used during development
  */
 
-const Gunner = require('../es5/Gunner');
+const Gunner = require('../src/Gunner');
 const expect = Gunner.expect;
 const expectMany = Gunner.expectMany;
 const gunner = new Gunner('sample tests');
